@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dolphin Beach - Sistema de Gestión</title>
+  <meta name="description" content="Sistema de gestión operativa Dolphin Beach">
+  <meta name="theme-color" content="#1E88E5">
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="img/android-chrome-192x192.png">
+  <link rel="icon" href="img/favicon-32x32.png" type="image/png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- jsPDF for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<!-- ===================== LOGIN VIEW ===================== -->
+<div id="login-view" class="login-view">
+  <div class="login-bg">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">
+          <i class="fas fa-umbrella-beach"></i>
+        </div>
+        <h1>Dolphin Beach</h1>
+        <p>Sistema de Gestión Operativa</p>
+      </div>
+      <form id="login-form" class="login-form" autocomplete="off">
+        <div class="form-group">
+          <label for="login-user"><i class="fas fa-user"></i> Usuario</label>
+          <input type="text" id="login-user" placeholder="Ingresa tu usuario" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label for="login-pass"><i class="fas fa-lock"></i> Contraseña</label>
+          <div class="input-eye">
+            <input type="password" id="login-pass" placeholder="Ingresa tu contraseña" autocomplete="current-password" required>
+            <button type="button" class="eye-btn" id="toggle-pass" aria-label="Mostrar/ocultar contraseña">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        <div id="login-error" class="login-error" style="display:none"></div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-login">
+          <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+        </button>
+      </form>
+      <div class="login-hint">
+        <details>
+          <summary>Credenciales de demo</summary>
+          <div class="credentials-list">
+            <div class="cred-item"><span class="cred-role admin">Admin</span><code>admin / admin123</code></div>
+            <div class="cred-item"><span class="cred-role reg">Registrador</span><code>registrador / reg123</code></div>
+            <div class="cred-item"><span class="cred-role playa">Op. Playa</span><code>op_playa / playa123</code></div>
+            <div class="cred-item"><span class="cred-role isla">Op. Isla</span><code>op_isla / isla123</code></div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== APP VIEW ===================== -->
+<div id="app-view" class="app-view" style="display:none">
+
+  <!-- HEADER FIJO -->
+  <header class="app-header" id="app-header">
+    <div class="header-inner">
+      <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="header-brand">
+        <i class="fas fa-umbrella-beach"></i>
+        <span class="brand-name">Dolphin Beach</span>
+      </div>
+      <div class="header-stats" id="header-stats">
+        <div class="hstat">
+          <span class="hstat-val" id="h-total">81</span>
+          <span class="hstat-lbl">Total</span>
+        </div>
+        <div class="hstat occupied">
+          <span class="hstat-val" id="h-ocupadas">0</span>
+          <span class="hstat-lbl">Ocupadas</span>
+        </div>
+        <div class="hstat available">
+          <span class="hstat-val" id="h-disponibles">81</span>
+          <span class="hstat-lbl">Libres</span>
+        </div>
+        <div class="hstat income">
+          <span class="hstat-val" id="h-ingresos">$0</span>
+          <span class="hstat-lbl">Ingresos</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-icon" id="btn-dark-mode" title="Modo oscuro" aria-label="Cambiar tema">
+          <i class="fas fa-moon"></i>
+        </button>
+        <div class="user-badge" id="user-badge">
+          <i class="fas fa-user-circle"></i>
+          <span id="user-name-badge">Admin</span>
+          <span class="role-chip" id="role-chip">ADMIN</span>
+        </div>
+        <button class="btn-icon btn-logout" id="btn-logout" title="Cerrar sesión" aria-label="Cerrar sesión">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- LAYOUT -->
+  <div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <span class="nav-section-title">Principal</span>
+          <a class="nav-item" data-page="dashboard" data-roles="ADMIN">
+            <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
+          </a>
+          <a class="nav-item" data-page="churuatas-playa" data-roles="ADMIN,OPERADOR_PLAYA">
+            <i class="fas fa-umbrella-beach"></i><span>Churuatas Playa</span>
+          </a>
+          <a class="nav-item" data-page="isla-el-rey" data-roles="ADMIN,OPERADOR_ISLA">
+            <i class="fas fa-island-tropical"></i><span>Isla El Rey</span>
+          </a>
+        </div>
+        <div class="nav-section">
+          <span class="nav-section-title">Operaciones</span>
+          <a class="nav-item" data-page="registro" data-roles="ADMIN,REGISTRADOR">
+            <i class="fas fa-clipboard-list"></i><span>Registro Entrada</span>
+            <span class="nav-badge" id="badge-registro">0</span>
+          </a>
+        </div>
+        <div class="nav-section">
+          <span class="nav-section-title">Sistema</span>
+          <a class="nav-item" data-page="admin" data-roles="ADMIN">
+            <i class="fas fa-cog"></i><span>Administración</span>
+          </a>
+          <a class="nav-item" data-page="acerca-de" data-roles="ADMIN,REGISTRADOR,OPERADOR_PLAYA,OPERADOR_ISLA">
+            <i class="fas fa-info-circle"></i><span>Acerca de</span>
+          </a>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="main-content">
+
+      <!-- ====== PAGE: DASHBOARD ====== -->
+      <div id="page-dashboard" class="page" style="display:none">
+        <div class="page-header">
+          <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+          <span class="page-subtitle">Vista general del sistema</span>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid" id="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon blue"><i class="fas fa-umbrella-beach"></i></div>
+            <div class="kpi-data">
+              <div class="kpi-value" id="kpi-total">81</div>
+              <div class="kpi-label">Total Churuatas</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon red"><i class="fas fa-user-check"></i></div>
+            <div class="kpi-data">
+              <div class="kpi-value" id="kpi-ocupadas">0</div>
+              <div class="kpi-label">Ocupadas</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon green"><i class="fas fa-check-circle"></i></div>
+            <div class="kpi-data">
+              <div class="kpi-value" id="kpi-disponibles">81</div>
+              <div class="kpi-label">Disponibles</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon amber"><i class="fas fa-dollar-sign"></i></div>
+            <div class="kpi-data">
+              <div class="kpi-value" id="kpi-ingresos">$0</div>
+              <div class="kpi-label">Ingresos Estimados</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon purple"><i class="fas fa-island-tropical"></i></div>
+            <div class="kpi-data">
+              <div class="kpi-value" id="kpi-isla">0/25</div>
+              <div class="kpi-label">Isla El Rey</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon teal"><i class="fas fa-clipboard-list"></i></div>
+            <div class="kpi-data">
+              <div class="kpi-value" id="kpi-registros">0</div>
+              <div class="kpi-label">Registros Hoy</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ocupación bar -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h3><i class="fas fa-chart-bar"></i> Ocupación por Sección</h3>
+          </div>
+          <div class="card-body" id="ocupacion-secciones">
+            <div class="seccion-bar-item">
+              <div class="seccion-bar-label">
+                <span>Islote</span><span id="occ-islote-pct">0%</span>
+              </div>
+              <div class="seccion-bar-track">
+                <div class="seccion-bar-fill blue" id="occ-islote-bar" style="width:0%"></div>
+              </div>
+              <small id="occ-islote-txt">0 / 27</small>
+            </div>
+            <div class="seccion-bar-item">
+              <div class="seccion-bar-label">
+                <span>Orilla Playa</span><span id="occ-playa-pct">0%</span>
+              </div>
+              <div class="seccion-bar-track">
+                <div class="seccion-bar-fill blue" id="occ-playa-bar" style="width:0%"></div>
+              </div>
+              <small id="occ-playa-txt">0 / 40</small>
+            </div>
+            <div class="seccion-bar-item">
+              <div class="seccion-bar-label">
+                <span>Área Verde</span><span id="occ-verde-pct">0%</span>
+              </div>
+              <div class="seccion-bar-track">
+                <div class="seccion-bar-fill green" id="occ-verde-bar" style="width:0%"></div>
+              </div>
+              <small id="occ-verde-txt">0 / 11</small>
+            </div>
+            <div class="seccion-bar-item">
+              <div class="seccion-bar-label">
+                <span>Premium</span><span id="occ-premium-pct">0%</span>
+              </div>
+              <div class="seccion-bar-track">
+                <div class="seccion-bar-fill amber" id="occ-premium-bar" style="width:0%"></div>
+              </div>
+              <small id="occ-premium-txt">0 / 3</small>
+            </div>
+            <div class="seccion-bar-item">
+              <div class="seccion-bar-label">
+                <span>Isla El Rey</span><span id="occ-isla-pct">0%</span>
+              </div>
+              <div class="seccion-bar-track">
+                <div class="seccion-bar-fill purple" id="occ-isla-bar" style="width:0%"></div>
+              </div>
+              <small id="occ-isla-txt">0 / 25</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accesos rápidos -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h3><i class="fas fa-bolt"></i> Acciones Rápidas</h3>
+          </div>
+          <div class="card-body">
+            <div class="quick-actions">
+              <button class="quick-btn" onclick="app.router.navigateTo('churuatas-playa')">
+                <i class="fas fa-umbrella-beach"></i>
+                <span>Gestionar Playa</span>
+              </button>
+              <button class="quick-btn" onclick="app.router.navigateTo('isla-el-rey')">
+                <i class="fas fa-island-tropical"></i>
+                <span>Isla El Rey</span>
+              </button>
+              <button class="quick-btn" onclick="app.router.navigateTo('registro')">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Registro Entrada</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== PAGE: CHURUATAS PLAYA ====== -->
+      <div id="page-churuatas-playa" class="page" style="display:none">
+        <div class="page-header">
+          <h2><i class="fas fa-umbrella-beach"></i> Churuatas Playa</h2>
+          <span class="page-subtitle">Gestión de 81 churuatas</span>
+          <div class="page-header-actions" id="playa-header-actions">
+            <!-- Buttons injected by JS based on role -->
+          </div>
+        </div>
+
+        <!-- Leyenda -->
+        <div class="legend-bar">
+          <span class="legend-item"><span class="dot green"></span>Disponible</span>
+          <span class="legend-item"><span class="dot red"></span>Ocupada (Azul)</span>
+          <span class="legend-item"><span class="dot orange"></span>Ocupada (Roja)</span>
+          <span class="legend-item"><span class="dot yellow"></span>Premium</span>
+        </div>
+
+        <!-- Mapa visual -->
+        <div id="mapa-churuatas" class="mapa-container">
+          <!-- Se renderiza por JS -->
+        </div>
+
+        <!-- Panel detalle -->
+        <div id="panel-detalle" class="panel-detalle" style="display:none">
+          <div class="panel-detalle-header">
+            <h3 id="detalle-titulo">Churuata</h3>
+            <button class="btn-icon" id="btn-cerrar-detalle"><i class="fas fa-times"></i></button>
+          </div>
+          <div id="detalle-content" class="panel-detalle-body">
+          </div>
+          <div class="panel-detalle-footer" id="detalle-footer">
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== PAGE: ISLA EL REY ====== -->
+      <div id="page-isla-el-rey" class="page" style="display:none">
+        <div class="page-header">
+          <h2><i class="fas fa-island-tropical"></i> Isla El Rey</h2>
+          <span class="page-subtitle">25 churuatas — $20 USD | Transporte $5 USD</span>
+          <div class="page-header-actions" id="isla-header-actions"></div>
+        </div>
+
+        <!-- Info transporte -->
+        <div class="info-banner">
+          <i class="fas fa-ship"></i>
+          <div>
+            <strong>Transporte Isla:</strong> $5 USD por persona — habilita viajes ilimitados durante el día.
+            El pago de transporte se registra por separado de la churuata.
+          </div>
+        </div>
+
+        <!-- Stats isla -->
+        <div class="kpi-grid mini-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon blue"><i class="fas fa-umbrella-beach"></i></div>
+            <div class="kpi-data">
+              <div class="kpi-value" id="isla-total">25</div>
+              <div class="kpi-label">Total</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon red"><i class="fas fa-user-check"></i></div>
+            <div class="kpi-data">
+              <div class="kpi-value" id="isla-ocupadas">0</div>
+              <div class="kpi-label">Ocupadas</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon green"><i class="fas fa-check-circle"></i></div>
+            <div class="kpi-data">
+              <div class="kpi-value" id="isla-disponibles">25</div>
+              <div class="kpi-label">Disponibles</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon amber"><i class="fas fa-dollar-sign"></i></div>
+            <div class="kpi-data">
+              <div class="kpi-value" id="isla-ingresos">$0</div>
+              <div class="kpi-label">Ingresos</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grid isla -->
+        <div id="mapa-isla" class="mapa-isla">
+          <!-- Se renderiza por JS -->
+        </div>
+
+        <!-- Panel detalle isla -->
+        <div id="panel-isla-detalle" class="panel-detalle" style="display:none">
+          <div class="panel-detalle-header">
+            <h3 id="isla-detalle-titulo">Churuata Isla</h3>
+            <button class="btn-icon" id="btn-cerrar-isla-detalle"><i class="fas fa-times"></i></button>
+          </div>
+          <div id="isla-detalle-content" class="panel-detalle-body"></div>
+          <div class="panel-detalle-footer" id="isla-detalle-footer"></div>
+        </div>
+      </div>
+
+      <!-- ====== PAGE: REGISTRO ENTRADA (ALCABALA) ====== -->
+      <div id="page-registro" class="page" style="display:none">
+        <div class="page-header">
+          <h2><i class="fas fa-clipboard-list"></i> Registro de Entrada</h2>
+          <span class="page-subtitle">Control de acceso — Alcabala Digital</span>
+          <div class="page-header-actions">
+            <button class="btn btn-outline" id="btn-pdf-registro">
+              <i class="fas fa-file-pdf"></i> Descargar PDF
+            </button>
+            <button class="btn btn-outline" id="btn-print-registro">
+              <i class="fas fa-print"></i> Imprimir
+            </button>
+          </div>
+        </div>
+
+        <!-- Contador del día -->
+        <div class="registro-counter-bar">
+          <div class="counter-badge">
+            <i class="fas fa-users"></i>
+            <span id="registro-count">0</span>
+            <small>visitantes hoy</small>
+          </div>
+          <div class="registro-date">
+            <i class="fas fa-calendar"></i>
+            <span id="registro-fecha"></span>
+          </div>
+        </div>
+
+        <!-- Formulario de registro -->
+        <div class="registro-form-card">
+          <h3><i class="fas fa-user-plus"></i> Nuevo Registro</h3>
+          <div class="registro-form-grid">
+            <div class="form-group">
+              <label for="reg-nombre">Nombre Completo *</label>
+              <input type="text" id="reg-nombre" placeholder="Nombre y apellido" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label for="reg-cedula">Cédula / Documento *</label>
+              <div class="input-with-btn">
+                <input type="text" id="reg-cedula" placeholder="Número de documento" autocomplete="off">
+                <button class="btn btn-secondary btn-sm" id="btn-camera" type="button" title="Escanear con cámara">
+                  <i class="fas fa-camera"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div id="camera-section" class="camera-section" style="display:none">
+            <div class="camera-container">
+              <video id="camera-video" autoplay playsinline></video>
+              <canvas id="camera-canvas" style="display:none"></canvas>
+              <div class="camera-overlay">
+                <div class="camera-frame"></div>
+                <p>Apunta la cámara al documento</p>
+              </div>
+            </div>
+            <div class="camera-actions">
+              <button class="btn btn-primary" id="btn-capture">
+                <i class="fas fa-camera"></i> Capturar
+              </button>
+              <button class="btn btn-outline" id="btn-close-camera">
+                <i class="fas fa-times"></i> Cerrar
+              </button>
+            </div>
+            <div id="camera-result" class="camera-result" style="display:none">
+              <img id="camera-preview" alt="Captura">
+              <div class="camera-ocr-result">
+                <p><i class="fas fa-info-circle"></i> Ingresa manualmente el número del documento desde la imagen</p>
+              </div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary btn-lg" id="btn-registrar">
+              <i class="fas fa-plus-circle"></i> Registrar Entrada
+            </button>
+            <button class="btn btn-outline" id="btn-limpiar-reg">
+              <i class="fas fa-eraser"></i> Limpiar
+            </button>
+          </div>
+        </div>
+
+        <!-- Filtro fecha -->
+        <div class="registro-filtros">
+          <div class="form-group-inline">
+            <label><i class="fas fa-filter"></i> Filtrar por fecha:</label>
+            <input type="date" id="filtro-fecha-reg" class="input-sm">
+            <button class="btn btn-sm btn-outline" id="btn-filtro-hoy">Hoy</button>
+            <button class="btn btn-sm btn-outline" id="btn-filtro-todo">Todos</button>
+          </div>
+        </div>
+
+        <!-- Tabla de registros -->
+        <div class="table-card">
+          <div class="table-header">
+            <h3>Registros</h3>
+            <span class="table-count" id="table-count-reg">0 registros</span>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table" id="tabla-registros">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Hora</th>
+                  <th>Nombre</th>
+                  <th>Cédula</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-registros">
+                <tr class="empty-row">
+                  <td colspan="5"><i class="fas fa-inbox"></i> No hay registros para esta fecha</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== PAGE: ADMINISTRACIÓN ====== -->
+      <div id="page-admin" class="page" style="display:none">
+        <div class="page-header">
+          <h2><i class="fas fa-cog"></i> Administración</h2>
+          <span class="page-subtitle">Gestión de usuarios y configuración</span>
+        </div>
+
+        <!-- Tabs admin -->
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="tab-usuarios">
+            <i class="fas fa-users"></i> Usuarios
+          </button>
+          <button class="tab-btn" data-tab="tab-datos">
+            <i class="fas fa-database"></i> Datos
+          </button>
+          <button class="tab-btn" data-tab="tab-config">
+            <i class="fas fa-sliders-h"></i> Configuración
+          </button>
+        </div>
+
+        <!-- Tab: Usuarios -->
+        <div id="tab-usuarios" class="tab-content active">
+          <div class="table-card mt-3">
+            <div class="table-header">
+              <h3>Usuarios del Sistema</h3>
+              <button class="btn btn-primary btn-sm" id="btn-nuevo-usuario">
+                <i class="fas fa-plus"></i> Nuevo Usuario
+              </button>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="tabla-usuarios">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Usuario</th>
+                    <th>Nombre</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-usuarios"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Datos -->
+        <div id="tab-datos" class="tab-content" style="display:none">
+          <div class="card mt-3">
+            <div class="card-header"><h3>Gestión de Datos</h3></div>
+            <div class="card-body">
+              <div class="data-actions-grid">
+                <div class="data-action-card">
+                  <i class="fas fa-download"></i>
+                  <h4>Exportar Datos</h4>
+                  <p>Descarga todos los datos del sistema en formato JSON</p>
+                  <button class="btn btn-primary" id="btn-exportar">Exportar JSON</button>
+                </div>
+                <div class="data-action-card">
+                  <i class="fas fa-upload"></i>
+                  <h4>Importar Datos</h4>
+                  <p>Restaura datos desde un archivo JSON previamente exportado</p>
+                  <label class="btn btn-outline" for="input-importar">Importar JSON</label>
+                  <input type="file" id="input-importar" accept=".json" style="display:none">
+                </div>
+                <div class="data-action-card danger">
+                  <i class="fas fa-trash-alt"></i>
+                  <h4>Limpiar Churuatas</h4>
+                  <p>Reinicia el estado de todas las churuatas a disponible</p>
+                  <button class="btn btn-danger" id="btn-limpiar">Limpiar Sistema</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Configuración -->
+        <div id="tab-config" class="tab-content" style="display:none">
+          <div class="card mt-3">
+            <div class="card-header"><h3>Configuración General</h3></div>
+            <div class="card-body">
+              <div class="config-grid">
+                <div class="form-group">
+                  <label>Precio Churuata Azul (USD)</label>
+                  <input type="number" id="cfg-precio-azul" value="10" min="0">
+                </div>
+                <div class="form-group">
+                  <label>Precio Churuata Roja (USD)</label>
+                  <input type="number" id="cfg-precio-roja" value="15" min="0">
+                </div>
+                <div class="form-group">
+                  <label>Precio Churuata Premium (USD)</label>
+                  <input type="number" id="cfg-precio-premium" value="40" min="0">
+                </div>
+                <div class="form-group">
+                  <label>Precio Silla (USD)</label>
+                  <input type="number" id="cfg-precio-silla" value="5" min="0">
+                </div>
+                <div class="form-group">
+                  <label>Tasa de Cambio USD → Bs</label>
+                  <input type="number" id="cfg-tasa-cambio" value="36.5" min="0" step="0.1">
+                </div>
+              </div>
+              <button class="btn btn-primary" id="btn-guardar-config">
+                <i class="fas fa-save"></i> Guardar Configuración
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== PAGE: ACERCA DE ====== -->
+      <div id="page-acerca-de" class="page" style="display:none">
+        <div class="page-header">
+          <h2><i class="fas fa-info-circle"></i> Acerca de</h2>
+        </div>
+        <div class="acerca-container">
+          <div class="acerca-hero">
+            <div class="acerca-logo"><i class="fas fa-umbrella-beach"></i></div>
+            <h1>Dolphin Beach</h1>
+            <p class="acerca-subtitle">Sistema de Gestión Operativa v2.0</p>
+            <div class="acerca-badges">
+              <span class="badge-tech">PWA</span>
+              <span class="badge-tech">Offline Ready</span>
+              <span class="badge-tech">Mobile First</span>
+            </div>
+          </div>
+
+          <div class="acerca-grid">
+            <div class="acerca-card">
+              <div class="acerca-card-icon"><i class="fas fa-code"></i></div>
+              <h3>Desarrollador</h3>
+              <p class="acerca-name">Cesar Alejandro Lamper Rodriguez</p>
+              <p class="acerca-title">Desarrollador Full Stack</p>
+              <div class="acerca-contact">
+                <a href="mailto:contacto@ejemplo.com" class="contact-link">
+                  <i class="fas fa-envelope"></i> contacto@ejemplo.com
+                </a>
+              </div>
+            </div>
+
+            <div class="acerca-card">
+              <div class="acerca-card-icon"><i class="fas fa-star"></i></div>
+              <h3>Servicios</h3>
+              <ul class="services-list">
+                <li><i class="fas fa-check"></i> Desarrollo de aplicaciones web y móviles</li>
+                <li><i class="fas fa-check"></i> Progressive Web Apps (PWA)</li>
+                <li><i class="fas fa-check"></i> Sistemas de gestión empresarial</li>
+                <li><i class="fas fa-check"></i> Integración de APIs y bases de datos</li>
+                <li><i class="fas fa-check"></i> Consultoría tecnológica</li>
+              </ul>
+            </div>
+
+            <div class="acerca-card">
+              <div class="acerca-card-icon"><i class="fas fa-cogs"></i></div>
+              <h3>Tecnologías</h3>
+              <div class="tech-grid">
+                <span class="tech-tag">HTML5</span>
+                <span class="tech-tag">CSS3</span>
+                <span class="tech-tag">JavaScript</span>
+                <span class="tech-tag">PWA</span>
+                <span class="tech-tag">IndexedDB</span>
+                <span class="tech-tag">Service Worker</span>
+              </div>
+            </div>
+
+            <div class="acerca-card">
+              <div class="acerca-card-icon"><i class="fas fa-info"></i></div>
+              <h3>Sistema</h3>
+              <div class="system-info">
+                <div class="sys-item"><span>Versión</span><strong>2.0.0</strong></div>
+                <div class="sys-item"><span>PWA</span><strong>Sí</strong></div>
+                <div class="sys-item"><span>Offline</span><strong>Sí</strong></div>
+                <div class="sys-item"><span>Roles</span><strong>4 niveles</strong></div>
+                <div class="sys-item"><span>Churuatas</span><strong>81 + 25 Isla</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="acerca-footer">
+            <p>&copy; 2026 Dolphin Beach. Sistema de Gestión Operativa.</p>
+          </div>
+        </div>
+      </div>
+
+    </main><!-- end main-content -->
+  </div><!-- end app-layout -->
+
+</div><!-- end app-view -->
+
+<!-- ===================== MODALES GLOBALES ===================== -->
+
+<!-- Modal Alquilar Churuata -->
+<div class="modal-overlay" id="modal-alquilar" style="display:none">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modal-alquilar-titulo"><i class="fas fa-plus-circle"></i> Alquilar Churuata</h3>
+      <button class="btn-icon modal-close" data-modal="modal-alquilar"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="form-alquilar-body">
+      <!-- Rendered by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- Modal Liberar Churuata -->
+<div class="modal-overlay" id="modal-liberar" style="display:none">
+  <div class="modal-box modal-sm">
+    <div class="modal-head">
+      <h3><i class="fas fa-door-open"></i> Liberar Churuata</h3>
+      <button class="btn-icon modal-close" data-modal="modal-liberar"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="modal-liberar-body">
+      <!-- Rendered by JS -->
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" data-modal="modal-liberar">Cancelar</button>
+      <button class="btn btn-danger" id="btn-confirmar-liberar"><i class="fas fa-check"></i> Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Intercambio -->
+<div class="modal-overlay" id="modal-intercambio" style="display:none">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3><i class="fas fa-exchange-alt"></i> Intercambiar Churuatas</h3>
+      <button class="btn-icon modal-close" data-modal="modal-intercambio"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="modal-intercambio-body"></div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" data-modal="modal-intercambio">Cancelar</button>
+      <button class="btn btn-primary" id="btn-confirmar-intercambio"><i class="fas fa-exchange-alt"></i> Intercambiar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Nuevo Usuario -->
+<div class="modal-overlay" id="modal-usuario" style="display:none">
+  <div class="modal-box modal-sm">
+    <div class="modal-head">
+      <h3 id="modal-usuario-titulo"><i class="fas fa-user-plus"></i> Nuevo Usuario</h3>
+      <button class="btn-icon modal-close" data-modal="modal-usuario"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="modal-usuario-body">
+      <div class="form-group">
+        <label>Nombre completo *</label>
+        <input type="text" id="usr-nombre" placeholder="Nombre del usuario">
+      </div>
+      <div class="form-group">
+        <label>Usuario *</label>
+        <input type="text" id="usr-username" placeholder="Nombre de usuario (login)">
+      </div>
+      <div class="form-group">
+        <label>Contraseña *</label>
+        <input type="password" id="usr-password" placeholder="Contraseña">
+      </div>
+      <div class="form-group">
+        <label>Rol *</label>
+        <select id="usr-rol">
+          <option value="REGISTRADOR">Registrador</option>
+          <option value="OPERADOR_PLAYA">Operador Playa</option>
+          <option value="OPERADOR_ISLA">Operador Isla</option>
+          <option value="ADMIN">Administrador</option>
+        </select>
+      </div>
+      <input type="hidden" id="usr-id" value="">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" data-modal="modal-usuario">Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar-usuario"><i class="fas fa-save"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Confirmación genérica -->
+<div class="modal-overlay" id="modal-confirm" style="display:none">
+  <div class="modal-box modal-xs">
+    <div class="modal-head">
+      <h3 id="modal-confirm-title"><i class="fas fa-question-circle"></i> Confirmar</h3>
+    </div>
+    <div class="modal-body">
+      <p id="modal-confirm-msg">¿Está seguro?</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" id="btn-confirm-cancel">Cancelar</button>
+      <button class="btn btn-danger" id="btn-confirm-ok">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notifications -->
+<div id="toast-container"></div>
+
+<!-- Scripts -->
+<script src="js/auth.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/data/churuatas.js"></script>
+<script src="js/data/isla.js"></script>
+<script src="js/components/toast.js"></script>
+<script src="js/pages/playa.js"></script>
+<script src="js/pages/isla.js"></script>
+<script src="js/pages/registro.js"></script>
+<script src="js/pages/admin.js"></script>
+<script src="js/router.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // Register Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(r => console.log('SW registered:', r.scope))
+        .catch(e => console.warn('SW registration failed:', e));
+    });
+  }
+</script>
+</body>
+</html>

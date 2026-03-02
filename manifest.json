@@ -1,0 +1,16 @@
+{
+  "name": "Dolphin Beach — Gestión Operativa",
+  "short_name": "Dolphin Beach",
+  "description": "Sistema de gestión operativa para Dolphin Beach",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1E88E5",
+  "theme_color": "#1E88E5",
+  "orientation": "any",
+  "icons": [
+    { "src": "img/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "img/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "es"
+}

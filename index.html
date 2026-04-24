@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Playa Delfín — Sistema de Gestión</title>
+  <meta name="description" content="Sistema de gestión operativa Playa Delfín v2.0.3">
+  <meta name="theme-color" content="#0077B6">
+  <meta name="application-name" content="Playa Delfín">
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Playa Delfín">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <link rel="icon" type="image/x-icon" href="img/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Tesseract.js — OCR client-side -->
+  <script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<!-- ==================== LOGIN VIEW ==================== -->
+<div id="login-view" class="login-view">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo">
+        <img src="img/android-chrome-192x192.png" alt="Playa Delfín" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\'fas fa-umbrella-beach\'></i>'">
+      </div>
+      <h1>Playa Delfín</h1>
+      <p>Sistema de Gestión Operativa v2.0.3</p>
+    </div>
+    <form id="login-form" autocomplete="off">
+      <div class="form-group">
+        <label for="login-user"><i class="fas fa-user"></i> Usuario</label>
+        <input type="text" id="login-user" placeholder="Ingresa tu usuario" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label for="login-pass"><i class="fas fa-lock"></i> Contraseña</label>
+        <div class="input-eye">
+          <input type="password" id="login-pass" placeholder="Ingresa tu contraseña" autocomplete="current-password" required>
+          <button type="button" class="eye-btn" id="toggle-pass" aria-label="Mostrar/ocultar contraseña">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+      <div id="login-error" class="login-error" style="display:none">
+        <i class="fas fa-exclamation-circle"></i><span></span>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-login">
+        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+      </button>
+    </form>
+    <div class="login-hint">
+      <details>
+        <summary>Credenciales de demostración</summary>
+        <div class="credentials-list">
+          <div class="cred-item"><span class="cred-role admin">Admin</span><code>admin / admin123</code></div>
+          <div class="cred-item"><span class="cred-role reg">Registrador</span><code>registrador / reg123</code></div>
+          <div class="cred-item"><span class="cred-role playa">Op. Playa</span><code>op_playa / playa123</code></div>
+          <div class="cred-item"><span class="cred-role isla">Op. Isla</span><code>op_isla / isla123</code></div>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== APP VIEW ==================== -->
+<div id="app-view" class="app-view" style="display:none">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-inner">
+      <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menú">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="header-brand">
+        <i class="fas fa-umbrella-beach"></i>
+        <span>Playa Delfín</span>
+      </div>
+      <div class="header-stats">
+        <div class="hstat"><span class="hstat-val" id="h-total">0</span><span class="hstat-lbl">Total</span></div>
+        <div class="hstat"><span class="hstat-val" id="h-ocupadas">0</span><span class="hstat-lbl">Ocup.</span></div>
+        <div class="hstat"><span class="hstat-val" id="h-disponibles">0</span><span class="hstat-lbl">Libre</span></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR OVERLAY -->
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo"><i class="fas fa-umbrella-beach"></i></div>
+      <div>
+        <div class="sidebar-brand">Playa Delfín</div>
+        <div class="sidebar-version">v2.0.3</div>
+      </div>
+    </div>
+    <div class="sidebar-user"><div id="user-info"></div></div>
+    <nav class="sidebar-nav"><ul id="nav-list"></ul></nav>
+    <div class="sidebar-footer">
+      <button class="btn btn-outline btn-block" id="btn-logout">
+        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div id="page-dashboard" class="page">
+      <div class="page-header">
+        <h2><i class="fas fa-chart-line"></i> Dashboard</h2>
+        <p>Resumen general del sistema — Playa Delfín</p>
+      </div>
+      <div class="dash-section">
+        <div class="dash-section-title"><i class="fas fa-umbrella-beach"></i> Churuatas Playa</div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-val" id="dash-playa-total">0</div><div class="stat-lbl">Total</div></div>
+          <div class="stat-card ocp"><div class="stat-val" id="dash-playa-ocup">0</div><div class="stat-lbl">Ocupadas</div></div>
+          <div class="stat-card disp"><div class="stat-val" id="dash-playa-disp">0</div><div class="stat-lbl">Libres</div></div>
+          <div class="stat-card ing"><div class="stat-val" id="dash-playa-ingresos">$0</div><div class="stat-lbl">Ingresos</div></div>
+        </div>
+      </div>
+      <div class="dash-section">
+        <div class="dash-section-title"><i class="fas fa-water"></i> Isla El Rey</div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-val" id="dash-isla-total">0</div><div class="stat-lbl">Total</div></div>
+          <div class="stat-card ocp"><div class="stat-val" id="dash-isla-ocup">0</div><div class="stat-lbl">Ocupadas</div></div>
+          <div class="stat-card disp"><div class="stat-val" id="dash-isla-disp">0</div><div class="stat-lbl">Libres</div></div>
+          <div class="stat-card ing"><div class="stat-val" id="dash-isla-ingresos">$0</div><div class="stat-lbl">Ingresos</div></div>
+        </div>
+      </div>
+      <div class="dash-section">
+        <div class="dash-section-title"><i class="fas fa-circle" style="color:var(--danger)"></i> Churuatas Playa Ocupadas</div>
+        <div class="card">
+          <div id="dash-ocupadas-list" class="card-body" style="padding:0">
+            <div class="empty-state"><i class="fas fa-umbrella-beach"></i><p>Sin datos aún</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== REGISTRADOR ===== -->
+    <div id="page-registro" class="page">
+      <div class="page-header">
+        <h2><i class="fas fa-user-check"></i> Registrador de Entrada</h2>
+        <p id="registro-fecha">Cargando fecha...</p>
+      </div>
+
+      <!-- Form card -->
+      <div class="card registro-form-card">
+        <div class="card-header">
+          <h3><i class="fas fa-plus-circle"></i> Nuevo Registro</h3>
+          <span class="badge badge-primary" id="registro-count">0</span>
+        </div>
+        <div class="card-body">
+          <!-- Photo capture -->
+          <div class="form-group">
+            <label><i class="fas fa-camera"></i> Foto de Identificación</label>
+            <div class="foto-row">
+              <span id="foto-indicator"><i class="fas fa-camera" style="color:var(--text-muted)"></i> Sin foto</span>
+              <button type="button" class="btn btn-outline btn-sm" id="btn-abrir-camara">
+                <i class="fas fa-camera"></i> Capturar
+              </button>
+            </div>
+          </div>
+
+          <!-- OCR Scan Button -->
+          <div class="form-group">
+            <label><i class="fas fa-id-card"></i> Escaneo de Cédula</label>
+            <button type="button" class="btn btn-secondary btn-block" id="btn-scan-ocr">
+              <i class="fas fa-camera-retro"></i> Escanear Cédula (OCR)
+            </button>
+            <small class="form-hint"><i class="fas fa-info-circle"></i> Extrae automáticamente nombre y cédula usando la cámara</small>
+          </div>
+
+          <div class="form-row cols-2">
+            <div class="form-group">
+              <label for="reg-nombre">Nombre Completo *</label>
+              <input type="text" id="reg-nombre" placeholder="Ej: María García" maxlength="80" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label for="reg-cedula">Cédula *</label>
+              <input type="text" id="reg-cedula" placeholder="Ej: V-12345678" maxlength="20" autocomplete="off">
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-primary btn-block" id="btn-registrar">
+            <i class="fas fa-user-plus"></i> Registrar Entrada
+          </button>
+        </div>
+      </div>
+
+      <!-- Records table -->
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="fas fa-list"></i> Registros del Día</h3>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span class="text-muted text-sm" id="table-count-reg">0 registros</span>
+            <input type="date" id="filtro-fecha-reg" style="width:auto;min-height:36px;padding:.3rem .6rem;font-size:.82rem">
+            <button class="btn btn-primary btn-sm" id="btn-pdf-diario" title="Generar PDF del día">
+              <i class="fas fa-file-pdf"></i> PDF del Día
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Hora</th><th>Nombre</th><th>Cédula</th><th>Acción</th></tr>
+            </thead>
+            <tbody id="tbody-registros">
+              <tr class="empty-row"><td colspan="5"><i class="fas fa-inbox"></i> Sin registros hoy</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CHURUATAS PLAYA ===== -->
+    <div id="page-churuatas-playa" class="page">
+      <div class="page-header">
+        <h2><i class="fas fa-umbrella-beach"></i> Churuatas Playa</h2>
+        <p>Gestión de churuatas en playa — Playa Delfín</p>
+      </div>
+      <div class="stats-grid" style="margin-bottom:1rem">
+        <div class="stat-card"><div class="stat-val" id="playa-total">0</div><div class="stat-lbl">Total</div></div>
+        <div class="stat-card ocp"><div class="stat-val" id="playa-ocupadas">0</div><div class="stat-lbl">Ocupadas</div></div>
+        <div class="stat-card disp"><div class="stat-val" id="playa-disponibles">0</div><div class="stat-lbl">Libres</div></div>
+        <div class="stat-card ing"><div class="stat-val" id="playa-ingresos">$0</div><div class="stat-lbl">Ingresos</div></div>
+      </div>
+      <div id="mapa-churuatas"></div>
+      <div id="panel-detalle">
+        <div class="panel-header"><h4 id="detalle-titulo">Selecciona una churuata</h4></div>
+        <div class="panel-body" id="detalle-content"></div>
+        <div class="panel-footer" id="detalle-footer"></div>
+      </div>
+    </div>
+
+    <!-- ===== ISLA EL REY ===== -->
+    <div id="page-isla-el-rey" class="page">
+      <div class="page-header">
+        <!-- SVG Isla El Rey — palmera + oleaje -->
+        <svg class="isla-rey-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-label="Isla El Rey">
+          <!-- Ocean base -->
+          <ellipse cx="32" cy="52" rx="28" ry="9" fill="#00B4D8" opacity=".3"/>
+          <ellipse cx="32" cy="54" rx="22" ry="7" fill="#0096C7" opacity=".4"/>
+          <!-- Sand island -->
+          <ellipse cx="32" cy="46" rx="16" ry="7" fill="#F9C74F"/>
+          <!-- Palm trunk -->
+          <path d="M31 46 Q29 38 30 28 Q31 22 32 18" stroke="#8B5E3C" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <!-- Palm leaves -->
+          <path d="M30 22 Q18 16 14 10" stroke="#2DC653" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M31 20 Q22 12 24 4"  stroke="#4CAF50" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M32 19 Q32 10 36 4"  stroke="#2DC653" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M33 20 Q42 12 46 6"  stroke="#4CAF50" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M33 22 Q44 18 50 14" stroke="#2DC653" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <!-- Coconut -->
+          <circle cx="31" cy="22" r="2.5" fill="#8B5E3C"/>
+          <!-- Waves -->
+          <path d="M8 52 Q14 48 20 52 Q26 56 32 52 Q38 48 44 52 Q50 56 56 52" stroke="#0077B6" stroke-width="1.5" fill="none" opacity=".6"/>
+        </svg>
+        <div>
+          <h2><i class="fas fa-water"></i> Isla El Rey</h2>
+          <p>Gestión de churuatas — Isla El Rey</p>
+        </div>
+      </div>
+
+      <div class="stats-grid" style="margin-bottom:1rem">
+        <div class="stat-card"><div class="stat-val" id="isla-total">0</div><div class="stat-lbl">Total</div></div>
+        <div class="stat-card ocp"><div class="stat-val" id="isla-ocupadas">0</div><div class="stat-lbl">Ocupadas</div></div>
+        <div class="stat-card disp"><div class="stat-val" id="isla-disponibles">0</div><div class="stat-lbl">Libres</div></div>
+        <div class="stat-card ing"><div class="stat-val" id="isla-ingresos">$0</div><div class="stat-lbl">Ingresos</div></div>
+      </div>
+
+      <div class="card" style="margin-bottom:.75rem">
+        <div class="card-header"><h3><i class="fas fa-th"></i> Mapa de Churuatas</h3></div>
+        <div class="card-body" style="padding:.5rem">
+          <div id="mapa-isla"></div>
+        </div>
+      </div>
+
+      <div id="panel-isla-detalle">
+        <div class="panel-header"><h4 id="isla-detalle-titulo"><i class="fas fa-water"></i> Selecciona una churuata</h4></div>
+        <div class="panel-body" id="isla-detalle-content"></div>
+        <div class="panel-footer" id="isla-detalle-footer"></div>
+      </div>
+    </div>
+
+    <!-- ===== ADMIN ===== -->
+    <div id="page-admin" class="page">
+      <div class="page-header">
+        <h2><i class="fas fa-cog"></i> Administración</h2>
+        <p>Gestión de usuarios, configuración y datos</p>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="tab-usuarios"><i class="fas fa-users"></i> Usuarios</button>
+        <button class="tab-btn" data-tab="tab-config"><i class="fas fa-sliders-h"></i> Precios</button>
+        <button class="tab-btn" data-tab="tab-datos"><i class="fas fa-database"></i> Datos</button>
+      </div>
+
+      <!-- Tab Usuarios -->
+      <div id="tab-usuarios" class="tab-content">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:.75rem">
+          <button class="btn btn-primary" id="btn-nuevo-usuario">
+            <i class="fas fa-user-plus"></i> Nuevo Usuario
+          </button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
+              </thead>
+              <tbody id="tbody-usuarios">
+                <tr class="empty-row"><td colspan="5"><i class="fas fa-users"></i> Cargando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Configuración -->
+      <div id="tab-config" class="tab-content" style="display:none">
+        <div class="settings-group">
+          <h4><i class="fas fa-umbrella-beach"></i> Precios Playa</h4>
+          <div class="form-row cols-2">
+            <div class="form-group">
+              <label>Churuata VIP (Frente mar) USD</label>
+              <input type="number" id="cfg-precio-vip" min="0" step="0.5" placeholder="15">
+            </div>
+            <div class="form-group">
+              <label>Churuata Azul USD</label>
+              <input type="number" id="cfg-precio-azul" min="0" step="0.5" placeholder="10">
+            </div>
+            <div class="form-group">
+              <label>Precio Silla USD</label>
+              <input type="number" id="cfg-precio-silla" min="0" step="0.5" placeholder="2">
+            </div>
+            <div class="form-group">
+              <label>Churuata Premium USD (SECOMBNAR, COMBNAR, COMEDRA)</label>
+              <input type="number" id="cfg-precio-premium" min="0" step="0.5" placeholder="40">
+            </div>
+          </div>
+        </div>
+        <div class="settings-group">
+          <h4><i class="fas fa-water"></i> Precios Isla El Rey</h4>
+          <div class="form-row cols-2">
+            <div class="form-group">
+              <label>Churuata Isla USD</label>
+              <input type="number" id="cfg-precio-isla" min="0" step="0.5" placeholder="20">
+            </div>
+            <div class="form-group">
+              <label>Transporte por persona USD</label>
+              <input type="number" id="cfg-precio-transp" min="0" step="0.5" placeholder="5">
+            </div>
+          </div>
+        </div>
+        <div class="settings-group">
+          <h4><i class="fas fa-exchange-alt"></i> Tasa de Cambio</h4>
+          <div class="form-group">
+            <label>Bs por USD (para Pago Móvil / Mixto)</label>
+            <input type="number" id="cfg-tasa-cambio" min="0" step="0.5" placeholder="36.5">
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btn-guardar-config">
+          <i class="fas fa-save"></i> Guardar Configuración
+        </button>
+      </div>
+
+      <!-- Tab Datos -->
+      <div id="tab-datos" class="tab-content" style="display:none">
+        <div class="admin-cards-grid">
+          <div class="admin-action-card">
+            <div class="action-icon blue"><i class="fas fa-download"></i></div>
+            <h4>Exportar Datos</h4>
+            <p>Descarga un respaldo de todos los datos del sistema en formato JSON.</p>
+            <button class="btn btn-primary btn-block" id="btn-exportar">
+              <i class="fas fa-download"></i> Exportar
+            </button>
+          </div>
+          <div class="admin-action-card">
+            <div class="action-icon green"><i class="fas fa-upload"></i></div>
+            <h4>Importar Datos</h4>
+            <p>Restaura el sistema desde un archivo de respaldo JSON.</p>
+            <label class="btn btn-outline btn-block" style="cursor:pointer">
+              <i class="fas fa-upload"></i> Seleccionar archivo
+              <input type="file" id="input-importar" accept=".json" style="display:none">
+            </label>
+          </div>
+          <div class="admin-action-card">
+            <div class="action-icon red"><i class="fas fa-redo"></i></div>
+            <h4>Reiniciar Sistema</h4>
+            <p>Libera todas las churuatas. Los registros de entrada no se borran.</p>
+            <button class="btn btn-outline btn-block" id="btn-limpiar" style="border-color:var(--danger);color:var(--danger)">
+              <i class="fas fa-redo"></i> Reiniciar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ACERCA DE ===== -->
+    <div id="page-acerca-de" class="page">
+      <div class="about-hero">
+        <div class="about-logo">
+          <img src="img/android-chrome-192x192.png" alt="Playa Delfín" style="width:52px;height:52px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\'fas fa-umbrella-beach\'></i>'">
+        </div>
+        <h1>Playa Delfín</h1>
+        <p>Sistema de Gestión Operativa</p>
+        <span class="version-tag">v2.0.3</span>
+      </div>
+
+      <div class="card mb-2">
+        <div class="card-header"><h3><i class="fas fa-info-circle"></i> Acerca de la Aplicación</h3></div>
+        <div class="card-body">
+          <p style="font-size:.9rem;color:var(--text-muted);line-height:1.7">
+            Playa Delfín es una PWA (Progressive Web App) diseñada para la gestión operativa de playa:
+            registro de visitantes, control de churuatas, pagos y más. Funciona sin conexión a internet
+            y se puede instalar en tu dispositivo.
+          </p>
+          <div style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:.5rem">
+            <span class="badge badge-primary"><i class="fas fa-mobile-alt"></i> PWA Offline</span>
+            <span class="badge badge-success"><i class="fas fa-shield-alt"></i> Roles y permisos</span>
+            <span class="badge badge-primary"><i class="fas fa-file-pdf"></i> Generación de PDFs</span>
+            <span class="badge badge-success"><i class="fas fa-camera"></i> OCR de Cédulas</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-2">
+        <div class="card-header"><h3><i class="fas fa-address-card"></i> Contacto y Soporte</h3></div>
+        <div class="contact-card" style="border:none">
+          <a href="mailto:cesarlamper15.03.2006@gmail.com" class="contact-item">
+            <div class="contact-icon email"><i class="fas fa-envelope"></i></div>
+            <div class="contact-info">
+              <div class="label">Correo electrónico</div>
+              <div class="value">cesarlamper15.03.2006@gmail.com</div>
+            </div>
+            <i class="fas fa-chevron-right" style="color:var(--text-muted);font-size:.8rem;margin-left:auto"></i>
+          </a>
+          <a href="https://wa.me/584125423946" target="_blank" rel="noopener" class="contact-item">
+            <div class="contact-icon whatsapp"><i class="fab fa-whatsapp"></i></div>
+            <div class="contact-info">
+              <div class="label">WhatsApp</div>
+              <div class="value">+58 412 542 3946</div>
+            </div>
+            <i class="fas fa-chevron-right" style="color:var(--text-muted);font-size:.8rem;margin-left:auto"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body" style="text-align:center;color:var(--text-muted);font-size:.8rem">
+          <p>Playa Delfín v2.0.3 &copy; 2025–2026</p>
+          <p style="margin-top:.25rem">Todos los derechos reservados</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ==================== MODALS ==================== -->
+
+<!-- Modal: Cámara -->
+<div id="modal-camara" class="modal" style="z-index:300">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3><i class="fas fa-camera"></i> Capturar Foto</h3>
+      <button class="modal-close" id="btn-cerrar-camara"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <video id="cam-video" autoplay playsinline style="width:100%;border-radius:8px;background:#000;max-height:280px;object-fit:cover"></video>
+      <div id="cam-preview-container" style="display:none">
+        <img id="cam-preview" style="width:100%;border-radius:8px;max-height:280px;object-fit:cover" alt="Vista previa">
+      </div>
+      <canvas id="cam-canvas" style="display:none"></canvas>
+      <div class="cam-controls" style="margin-top:.75rem;justify-content:center">
+        <button class="btn btn-primary" id="btn-capturar-foto"><i class="fas fa-circle"></i> Capturar</button>
+        <button class="btn btn-outline" id="btn-retomar" style="display:none"><i class="fas fa-redo"></i> Retomar</button>
+        <button class="btn btn-primary" id="btn-aceptar-foto" style="display:none"><i class="fas fa-check"></i> Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Ocupar Churuata Playa -->
+<div id="modal-ocupar" class="modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modal-ocp-titulo"><i class="fas fa-sign-in-alt"></i> Ocupar Churuata</h3>
+      <button class="modal-close" data-close-modal="modal-ocupar"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ocp-id">
+      <input type="hidden" id="ocp-modo" value="ocupar">
+
+      <div class="form-group">
+        <label for="ocp-nombre">Nombre Completo *</label>
+        <input type="text" id="ocp-nombre" placeholder="Nombre y apellido" maxlength="80" autocomplete="off">
+      </div>
+
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label for="ocp-cedula">Cédula *</label>
+          <input type="text" id="ocp-cedula" placeholder="V-12345678" maxlength="15">
+        </div>
+        <div class="form-group">
+          <label for="ocp-telefono">Teléfono</label>
+          <input type="tel" id="ocp-telefono" placeholder="0412-1234567" maxlength="15">
+        </div>
+      </div>
+
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label for="ocp-sillas">Sillas ($2 c/u)</label>
+          <input type="number" id="ocp-sillas" min="0" max="20" value="0">
+        </div>
+        <div class="form-group">
+          <label for="ocp-metodo">Método de Pago *</label>
+          <select id="ocp-metodo">
+            <option value="USD">USD — Dólar</option>
+            <option value="PAGO_MOVIL">Pago Móvil (Bs)</option>
+            <option value="MIXTO">Mixto (USD + Bs)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Pago Móvil row (visible for PAGO_MOVIL & MIXTO) -->
+      <div id="ocp-movil-row" style="display:none">
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label for="ocp-ref-movil">
+              Referencia * <small class="ref-hint">(4 dígitos)</small>
+            </label>
+            <input type="text" id="ocp-ref-movil" placeholder="4 dígitos" maxlength="4" inputmode="numeric" pattern="[0-9]{4}">
+          </div>
+          <div class="form-group">
+            <label for="ocp-tel-movil">Teléfono emisor</label>
+            <input type="tel" id="ocp-tel-movil" placeholder="0412-0000000" maxlength="15">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="ocp-banco">Banco</label>
+          <select id="ocp-banco">
+            <option>Banco de Venezuela</option><option>Banesco</option>
+            <option>Mercantil</option><option>BBVA Provincial</option>
+            <option>Bancaribe</option><option>Otro</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Mixto row (visible for MIXTO only) -->
+      <div id="ocp-mixto-row" style="display:none">
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label for="ocp-monto-usd-mixto">Monto USD</label>
+            <input type="number" id="ocp-monto-usd-mixto" min="0" step="0.5" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label for="ocp-monto-bs-mixto">Monto Bs</label>
+            <input type="number" id="ocp-monto-bs-mixto" min="0" step="0.5" placeholder="0.00">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="ocp-notas">Notas</label>
+        <textarea id="ocp-notas" rows="2" placeholder="Observaciones opcionales..."></textarea>
+      </div>
+
+      <div id="ocp-resumen"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close-modal="modal-ocupar">Cancelar</button>
+      <button class="btn btn-primary" id="btn-confirmar-ocupar"><i class="fas fa-check"></i> Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Liberar Churuata Playa -->
+<div id="modal-liberar" class="modal">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-header">
+      <h3><i class="fas fa-door-open"></i> Liberar Churuata</h3>
+      <button class="modal-close" data-close-modal="modal-liberar"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <p>¿Confirmas liberar esta churuata? Se registrará la salida del cliente.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close-modal="modal-liberar">Cancelar</button>
+      <button class="btn btn-danger" id="btn-confirmar-liberar"><i class="fas fa-door-open"></i> Liberar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Ocupar Isla -->
+<div id="modal-isla-ocupar" class="modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modal-isla-titulo"><i class="fas fa-sign-in-alt"></i> Ocupar Isla</h3>
+      <button class="modal-close" data-close-modal="modal-isla-ocupar"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="isla-ocp-id">
+      <input type="hidden" id="isla-ocp-modo" value="ocupar">
+
+      <div class="form-group">
+        <label for="isla-ocp-nombre">Nombre Completo *</label>
+        <input type="text" id="isla-ocp-nombre" placeholder="Nombre y apellido" maxlength="80" autocomplete="off">
+      </div>
+
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label for="isla-ocp-cedula">Cédula *</label>
+          <input type="text" id="isla-ocp-cedula" placeholder="V-12345678" maxlength="15">
+        </div>
+        <div class="form-group">
+          <label for="isla-ocp-telefono">Teléfono</label>
+          <input type="tel" id="isla-ocp-telefono" placeholder="0412-1234567" maxlength="15">
+        </div>
+      </div>
+
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label for="isla-ocp-metodo">Método de Pago *</label>
+          <select id="isla-ocp-metodo">
+            <option value="USD">USD — Dólar</option>
+            <option value="PAGO_MOVIL">Pago Móvil (Bs)</option>
+            <option value="MIXTO">Mixto (USD + Bs)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="isla-ocp-personas">N° Personas (transporte)</label>
+          <input type="number" id="isla-ocp-personas" min="0" max="50" value="0" placeholder="0">
+          <small class="form-hint">$5 por persona</small>
+        </div>
+      </div>
+
+      <!-- Pago Móvil / Mixto rows -->
+      <div id="isla-ocp-movil-row" style="display:none">
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label for="isla-ocp-ref-movil">
+              Referencia * <small class="ref-hint">(4 dígitos)</small>
+            </label>
+            <input type="text" id="isla-ocp-ref-movil" placeholder="4 dígitos" maxlength="4" inputmode="numeric" pattern="[0-9]{4}">
+          </div>
+          <div class="form-group">
+            <label for="isla-ocp-tel-movil">Teléfono emisor</label>
+            <input type="tel" id="isla-ocp-tel-movil" placeholder="0412-0000000" maxlength="15">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="isla-ocp-banco">Banco</label>
+          <select id="isla-ocp-banco">
+            <option>Banco de Venezuela</option><option>Banesco</option>
+            <option>Mercantil</option><option>BBVA Provincial</option>
+            <option>Bancaribe</option><option>Otro</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Mixto amounts -->
+      <div id="isla-ocp-mixto-row" style="display:none">
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label for="isla-ocp-monto-usd">Monto USD</label>
+            <input type="number" id="isla-ocp-monto-usd" min="0" step="0.5" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label for="isla-ocp-monto-bs">Monto Bs</label>
+            <input type="number" id="isla-ocp-monto-bs" min="0" step="0.5" placeholder="0.00">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="isla-ocp-notas">Notas</label>
+        <textarea id="isla-ocp-notas" rows="2" placeholder="Observaciones opcionales..."></textarea>
+      </div>
+
+      <div id="isla-ocp-resumen"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close-modal="modal-isla-ocupar">Cancelar</button>
+      <button class="btn btn-primary" id="btn-isla-confirmar-ocupar"><i class="fas fa-check"></i> Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Liberar Isla -->
+<div id="modal-isla-liberar" class="modal">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-header">
+      <h3><i class="fas fa-door-open"></i> Liberar Isla</h3>
+      <button class="modal-close" data-close-modal="modal-isla-liberar"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <p>¿Confirmas liberar esta churuata? Se registrará la salida del cliente.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close-modal="modal-isla-liberar">Cancelar</button>
+      <button class="btn btn-danger" id="btn-isla-confirmar-liberar"><i class="fas fa-door-open"></i> Liberar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Usuario Admin -->
+<div id="modal-usuario" class="modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modal-usr-titulo"><i class="fas fa-user-plus"></i> Nuevo Usuario</h3>
+      <button class="modal-close" id="btn-cerrar-modal-usr"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="usr-id">
+      <div class="form-group">
+        <label for="usr-nombre">Nombre Completo *</label>
+        <input type="text" id="usr-nombre" placeholder="Nombre del usuario" maxlength="60">
+      </div>
+      <div class="form-group">
+        <label for="usr-username">Usuario *</label>
+        <input type="text" id="usr-username" placeholder="Nombre de usuario" maxlength="30" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label for="usr-password">Contraseña *</label>
+        <input type="password" id="usr-password" placeholder="Contraseña" maxlength="40" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label for="usr-rol">Rol *</label>
+        <select id="usr-rol">
+          <option value="">Seleccionar rol...</option>
+          <option value="ADMIN">Administrador</option>
+          <option value="REGISTRADOR">Registrador</option>
+          <option value="OPERADOR_PLAYA">Op. Playa</option>
+          <option value="OPERADOR_ISLA">Op. Isla</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="btn-cerrar-modal-usr2" onclick="document.getElementById('modal-usuario').style.display='none'">Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar-usuario"><i class="fas fa-save"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- ==================== SCRIPTS ==================== -->
+<script src="js/components/toast.js"></script>
+<script src="js/components/ocr.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/router.js"></script>
+<script src="js/data/churuatas.js"></script>
+<script src="js/data/isla.js"></script>
+<script src="js/pages/registro.js"></script>
+<script src="js/pages/playa.js"></script>
+<script src="js/pages/isla.js"></script>
+<script src="js/pages/admin.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

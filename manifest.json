@@ -1,0 +1,50 @@
+{
+  "name": "Playa Delfín — Gestión Operativa",
+  "short_name": "Playa Delfín",
+  "description": "Sistema de gestión operativa para Playa Delfín v2.0.3",
+  "version": "2.0.3",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0077B6",
+  "theme_color": "#0077B6",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "img/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "img/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "img/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "img/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "img/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "img/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "categories": [
+    "business",
+    "productivity"
+  ],
+  "lang": "es"
+}
